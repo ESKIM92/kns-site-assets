@@ -3,7 +3,8 @@
    ① 새 디자인 페이지(코드 위젯): 본문은 위젯 안에 있다(자리표시 방식은 10/23 15:xx 대표님 망에서 CDN 왕복이 느려 되돌림). 자리표시(data-kns-page)가 남아 있으면 pages/<이름>.html 에서 받아 붙인다. 본 뒤 상품 상세 틀 · 데이터를 미리 받아 둔다.
    ② 상품 상세(?idx=N, bmode 없음): skin/shell.html + skin/items.json(전 상품 묶음, 한 번 받아 캐시)으로 새 상품 상세 화면을 통째로 붙이고 아임웹 기본 화면은 숨긴다.
       데이터가 없는 상품(새로 등록 등)은 아임웹 기본 화면을 그대로 둔다.
-   ③ 그 밖의 옛 페이지(게시판 · 옛 분류 · 회사소개 등): 새 머리 · 메뉴 · 바닥만 두르고 본문은 아임웹 그대로.
+   ③ 그 밖의 옛 페이지(옛 분류 · 회사소개 등): 새 머리 · 메뉴 · 바닥만 두르고 본문은 아임웹 그대로.
+   ④ 게시판 /58 · /59 · /60 · /61 · /62(목록 · 글 보기): 아임웹 화면을 읽어 skin/board.html(새 디자인)로 다시 그림. 못 읽으면 ③.
    English 페이지(/467 · /469 · /470)는 보류(대표님 2026-10-16) — 손대지 않는다. 디자인 모드(kns.uriweb.kr)에서는 동작하지 않는다. */
 (function () {
   try {
@@ -108,7 +109,7 @@
     }
 
     // ③ 옛 페이지에 새 머리 · 메뉴 · 바닥만
-    shell().then(function (t) {
+    function skinWrap() { shell().then(function (t) {
       ready(function () {
         if (stub()) return;
         if (document.getElementById('kns-root')) { release(); return; }
@@ -136,6 +137,72 @@
         document.body.appendChild(frag(B.outerHTML));
         release('skin');
       });
-    }).catch(fail);
+    }).catch(fail); }
+
+    // ④ 게시판(공지사항 58 · 자료실 59 · CAD 60 · 소프트웨어 61 · 뉴스레터 62) — 아임웹 화면을 읽어 새 디자인으로 다시 그림
+    var bm = p.match(/^\/(58|59|60|61|62)$/);
+    function txt(e) { return e ? (e.textContent || '').replace(/\s+/g, ' ').trim() : ''; }
+    function parseBoard(doc, b) {
+      var sec = null, S = doc.querySelectorAll('.section_wrap');
+      for (var i = 0; i < S.length; i++) if (!S[i].querySelector('#kns-root') && S[i].querySelector('ul.li_body, .view_tit, .board_txt_area')) { sec = S[i]; break; }
+      if (!sec) return null;
+      var isView = q.get('bmode') === 'view' || !!sec.querySelector('.view_tit');
+      var out = { b: b, mode: isView ? 'view' : 'list' };
+      if (isView) {
+        var h = sec.querySelector('.view_tit'); if (!h) return null;
+        var hc = h.cloneNode(true), ce = hc.querySelector('.category'), cat = '', catHref = '';
+        if (ce) { cat = txt(ce); var ca = ce.closest('a'); catHref = ca ? ca.getAttribute('href') : ''; (ca || ce).parentNode.removeChild(ca || ce); }
+        var V = { title: txt(hc), cat: cat, catHref: catHref, files: [], listHref: '/' + b };
+        var body = sec.querySelector('.board_txt_area');
+        if (body) { var bc = body.cloneNode(true); Array.prototype.slice.call(bc.querySelectorAll('.file_area')).forEach(function (x) { x.parentNode.removeChild(x); }); V.body = bc.innerHTML; }
+        Array.prototype.slice.call(sec.querySelectorAll('.file_area a')).forEach(function (a) {
+          var href = a.getAttribute('data-kdl') || a.getAttribute('href') || ''; if (!href || href === '#kdl' || href === '#') return;
+          var n = txt(a), m = n.match(/^(.*?)\s*(\d[\d.,]*\s*[KMG]?B)$/i);
+          V.files.push({ n: m ? m[1] : n, size: m ? m[2] : '', href: href });
+        });
+        var st = txt(sec); var md = st.match(/(\d{4})[.\-\/](\d{2})[.\-\/](\d{2})/); if (md) V.date = md[1] + '-' + md[2] + '-' + md[3];
+        var mr = st.match(/조회\s*수?\s*:?\s*([\d,]+)/); if (mr) V.read = mr[1];
+        var cur = q.get('idx'), nav = [];
+        Array.prototype.slice.call(sec.querySelectorAll('a[href*="bmode=view"]')).forEach(function (a) {
+          var hh = a.getAttribute('href') || ''; var mi = hh.match(/idx=(\d+)/); if (!mi || mi[1] === cur) return; var t = txt(a); if (!t) return;
+          var box = a.closest('li,tr,div'), bt = box ? txt(box) : '';
+          nav.push({ t: t.replace(/^(이전\s*글|다음\s*글)\s*/, ''), href: hh, k: /이전/.test(bt) ? 'prev' : /다음/.test(bt) ? 'next' : '' });
+        });
+        nav.forEach(function (x, i) { var k = x.k || (i === 0 ? 'prev' : 'next'); if (!V[k]) V[k] = { t: x.t, href: x.href }; });
+        if (!body && /로그인|회원/.test(st)) V.locked = true;
+        out.view = V;
+      } else {
+        var L = { rows: [], pages: [], cats: [], q: q.get('keyword') || '', cat: q.get('category') || '' }, total = 0;
+        Array.prototype.slice.call(sec.querySelectorAll('ul.li_body')).forEach(function (r) {
+          var a = r.querySelector('li.tit a.list_text_title') || r.querySelector('li.tit a'); if (!a) return;
+          var ca = r.querySelector('li.category a'), no = txt(r.querySelector('li.count')); var n = parseInt(no.replace(/\D/g, ''), 10); if (n > total) total = n;
+          L.rows.push({ no: no, nt: /notice/.test(r.className), cat: txt(r.querySelector('li.category')), catHref: ca ? ca.getAttribute('href') : '', title: txt(a), href: a.getAttribute('href') || '',
+            date: txt(r.querySelector('li.time')), read: (txt(r.querySelector('li.read')).match(/[\d,]+/) || [''])[0], lock: false /* 아임웹 목록의 자물쇠 표시는 모든 글에 붙어 있어(게시판 설정) 화면에 쓰지 않는다 */, file: !!r.querySelector('.bt-file, .icon-attach, .icon-paperclip, [class*="attach"]') });
+        });
+        Array.prototype.slice.call(sec.querySelectorAll('ul.pagination li')).forEach(function (li) { var a = li.querySelector('a'); var ph = a ? (a.getAttribute('href') || '') : ''; if (/^javascript/.test(ph)) ph = ''; L.pages.push({ t: txt(li), href: ph, on: /active/.test(li.className), cls: /disabled/.test(li.className) ? 'dis' : '' }); });
+        var seen = {};
+        Array.prototype.slice.call(sec.querySelectorAll('a[href*="category="]')).forEach(function (a) { var hh = a.getAttribute('href') || '', mc = hh.match(/category=([^&]+)/); if (!mc || seen[mc[1]]) return; seen[mc[1]] = 1; var n = txt(a); if (!n) return; L.cats.push({ n: n, href: '/' + b + '/?category=' + mc[1], on: L.cat === mc[1] }); });
+        L.total = total || L.rows.filter(function (r) { return !r.nt; }).length;
+        L.lockNote = L.rows.some(function (r) { return r.lock; });
+        if (!L.rows.length && !/게시물이 없습니다|검색 결과|등록된/.test(txt(sec))) return null;
+        out.list = L;
+      }
+      return out;
+    }
+    if (bm) {
+      get(BASE + 'skin/board.html').then(function (t) { return t.split('__SKIN_BASE__').join(BASE); }).then(function (t) {
+        ready(function () {
+          if (document.getElementById('kns-root')) { release(); return; }
+          var data = null; try { data = parseBoard(document, bm[1]); } catch (e) { try { console.warn('kns-board', e); } catch (x) {} }
+          if (!data) { skinWrap(); return; }   // 못 읽으면 머리 · 바닥만 두르고 아임웹 본문 그대로
+          window.KNS_BOARD = data;
+          document.body.appendChild(frag(t));
+          release('board');
+        });
+      }).catch(function (e) { try { console.warn('kns-board', e); } catch (x) {} skinWrap(); });
+      return;
+    }
+
+    skinWrap();
   } catch (e) { try { console.warn('kns-loader', e); } catch (x) {} var h = document.documentElement; h.className = h.className.replace(/\s*kns-pre/g, ''); }
 })();
