@@ -176,8 +176,8 @@
         Array.prototype.slice.call(sec.querySelectorAll('ul.li_body')).forEach(function (r) {
           var a = r.querySelector('li.tit a.list_text_title') || r.querySelector('li.tit a'); if (!a) return;
           var ca = r.querySelector('li.category a'), no = txt(r.querySelector('li.count')); var n = parseInt(no.replace(/\D/g, ''), 10); if (n > total) total = n;
-          L.rows.push({ no: no, nt: /notice/.test(r.className), cat: txt(r.querySelector('li.category')), catHref: ca ? ca.getAttribute('href') : '', title: txt(a), href: a.getAttribute('href') || '',
-            date: txt(r.querySelector('li.time')), read: (txt(r.querySelector('li.read')).match(/[\d,]+/) || [''])[0], lock: false /* 아임웹 목록의 자물쇠 표시는 모든 글에 붙어 있어(게시판 설정) 화면에 쓰지 않는다 */, file: !!r.querySelector('.bt-file, .icon-attach, .icon-paperclip, [class*="attach"]') });
+          L.rows.push({ no: no, nt: /notice/.test(r.className), cat: txt(r.querySelector('li.category')), catHref: ca ? ca.getAttribute('href') : '', title: txt(a), href: /^javascript/.test(a.getAttribute('href') || '') ? '' : (a.getAttribute('href') || ''),
+            date: txt(r.querySelector('li.time')), read: (txt(r.querySelector('li.read')).match(/[\d,]+/) || [''])[0], lock: /^javascript/.test(a.getAttribute('href') || '') /* 회원 전용(CAD · 소프트웨어): 아임웹이 로그인 창을 띄우는 글 — 자물쇠 아이콘 자체는 모든 글에 붙어 있어 쓰지 않는다 */, file: !!r.querySelector('.bt-file, .icon-attach, .icon-paperclip, [class*="attach"]') });
         });
         Array.prototype.slice.call(sec.querySelectorAll('ul.pagination li')).forEach(function (li) { var a = li.querySelector('a'); var ph = a ? (a.getAttribute('href') || '') : ''; if (/^javascript/.test(ph)) ph = ''; L.pages.push({ t: txt(li), href: ph, on: /active/.test(li.className), cls: /disabled/.test(li.className) ? 'dis' : '' }); });
         var seen = {};
