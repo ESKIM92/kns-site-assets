@@ -39,18 +39,18 @@
 
     if (EX.indexOf(p) >= 0) { release(); return; }
 
-    if (isNew) {  // ① 자리표시 위젯이면 본문을 받아 붙인다(위젯에 본문이 들어 있으면 아무것도 안 함)
-      ready(function () {
-        var st = null, L = document.querySelectorAll('[data-kns-page]');
-        for (var i = 0; i < L.length; i++) { var sp = L[i].getAttribute('data-kns-path'); if (!sp || sp === p || (p === '/index' && sp === '/')) { st = L[i]; break; } }
-        if (!st || document.getElementById('kns-root')) { release(); return; }
-        get(BASE + 'pages/' + st.getAttribute('data-kns-page') + '.html').then(function (t) {
-          if (document.getElementById('kns-root')) return;
-          st.parentNode.insertBefore(frag(t), st); release();
-        }).catch(fail);
-      });
-      return;
+    function stub() {  // ① 자리표시 위젯(data-kns-page)이 있으면 본문을 받아 붙인다 → true
+      var st = null, L = document.querySelectorAll('[data-kns-page]');
+      for (var i = 0; i < L.length; i++) { var sp = L[i].getAttribute('data-kns-path'); if (!sp || sp === p || (p === '/index' && sp === '/')) { st = L[i]; break; } }
+      if (!st) return false;
+      if (document.getElementById('kns-root')) { release(); return true; }
+      get(BASE + 'pages/' + st.getAttribute('data-kns-page') + '.html').then(function (t) {
+        if (document.getElementById('kns-root')) return;
+        st.parentNode.insertBefore(frag(t), st); release();
+      }).catch(fail);
+      return true;
     }
+    if (isNew) { ready(function () { if (!stub()) release(); }); return; }   // 본문이 위젯 안에 있으면 그대로
 
     if (isItem) {  // ② 상품 상세
       Promise.all([shell(), fetch(BASE + 'skin/item/' + idx + '.json', { cache: 'force-cache' })]).then(function (r) {
@@ -73,6 +73,7 @@
     // ③ 옛 페이지에 새 머리 · 메뉴 · 바닥만
     shell().then(function (t) {
       ready(function () {
+        if (stub()) return;
         if (document.getElementById('kns-root')) { release(); return; }
         var doc = new DOMParser().parseFromString(t, 'text/html');
         var wrap = doc.getElementById('kns-wrap'), root = doc.getElementById('kns-root');
