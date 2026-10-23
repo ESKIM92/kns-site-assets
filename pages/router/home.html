@@ -303,10 +303,6 @@ window.addEventListener('pageshow',function(e){if(e.persisted&amp;&amp;!location
       for (var i = bs.length - 1; i &gt;= 0 &amp;&amp; used() &gt; g.clientWidth + 0.5; i--) bs[i].style.display = 'none'; }); }
   function relay(){ lay(); fitCr(); fitBg(); }
   relay(); window.addEventListener('resize', relay); if (document.fonts &amp;&amp; document.fonts.ready) document.fonts.ready.then(function(){ fitCr(); fitBg(); });
-  var f = document.querySelector('form[role=search]');
-  if (f) f.addEventListener('submit', function(e){ e.preventDefault(); alert('프로토타입: 검색은 아임웹 상품 검색으로 연결됩니다.'); });
-  var q = document.querySelector('form.card');
-  if (q) q.addEventListener('submit', function(e){ e.preventDefault(); alert('프로토타입: 실제 폼은 아임웹 입력폼(/16)으로 접수됩니다.'); });
 })();
 &lt;/script&gt;
 &lt;button aria-label="채널톡 상담" id="chatFab" style="position:fixed;right:24px;bottom:24px;width:60px;height:60px;border-radius:50%;border:0;background:#0070C0;box-shadow:0 6px 18px rgba(0,0,0,.25);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:50" title="채널톡 상담 (실제 사이트에서 연결)" type="button"&gt;&lt;svg aria-hidden="true" fill="none" height="28" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="28"&gt;&lt;path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.1A8.5 8.5 0 1 1 21 12z"&gt;&lt;/path&gt;&lt;path d="M8 10h8M8 14h5"&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/button&gt;
