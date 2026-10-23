@@ -37,20 +37,47 @@
     function shell() { return shellP || (shellP = get(BASE + 'skin/shell.html').then(function (t) { return t.split('__SKIN_BASE__').join(BASE); })); }
     function fail(e) { try { console.warn('kns-loader', e); } catch (x) {} release(); }
 
+    // 마우스를 올린 링크를 미리 그려 둔다(크롬 · 엣지, 같은 사이트 주소만). 구글 태그는 실제 열릴 때 집계한다.
+    try {
+      if (HTMLScriptElement.supports && HTMLScriptElement.supports('speculationrules') && !document.querySelector('script[type="speculationrules"]')) {
+        var sr = document.createElement('script'); sr.type = 'speculationrules';
+        sr.text = JSON.stringify({ prerender: [{ where: { and: [{ href_matches: '/*' }, { not: { href_matches: '/admin/*' } }, { not: { href_matches: '/*\\?*bmode=*' } }] }, eagerness: 'moderate' }] });
+        document.head.appendChild(sr);
+      }
+    } catch (e) {}
     if (EX.indexOf(p) >= 0) { release(); return; }
 
+    // 새 디자인 페이지: 본문을 미리 받아 두고(아임웹 본문 해석을 기다리지 않음), 자리표시 위젯이 나타나는 즉시 붙인다
+    var slug = (p === '/' || p === '/index') ? 'home' : p.slice(1);
+    var bodyP = isNew ? get(BASE + 'pages/' + slug + '.html') : null;
+    function stubEl() {
+      var L = document.querySelectorAll('[data-kns-page]');
+      for (var i = 0; i < L.length; i++) { var sp = L[i].getAttribute('data-kns-path'); if (!sp || sp === p || (p === '/index' && sp === '/')) return L[i]; }
+      return null;
+    }
+    var placed = false;
+    function place(st, t) {
+      if (placed || document.getElementById('kns-root')) { placed = true; release(); return; }
+      placed = true; st.parentNode.insertBefore(frag(t), st); release();
+    }
     function stub() {  // ① 자리표시 위젯(data-kns-page)이 있으면 본문을 받아 붙인다 → true
-      var st = null, L = document.querySelectorAll('[data-kns-page]');
-      for (var i = 0; i < L.length; i++) { var sp = L[i].getAttribute('data-kns-path'); if (!sp || sp === p || (p === '/index' && sp === '/')) { st = L[i]; break; } }
+      var st = stubEl();
       if (!st) return false;
       if (document.getElementById('kns-root')) { release(); return true; }
-      get(BASE + 'pages/' + st.getAttribute('data-kns-page') + '.html').then(function (t) {
-        if (document.getElementById('kns-root')) return;
-        st.parentNode.insertBefore(frag(t), st); release();
-      }).catch(fail);
+      (bodyP || get(BASE + 'pages/' + st.getAttribute('data-kns-page') + '.html')).then(function (t) { place(st, t); }).catch(fail);
       return true;
     }
-    if (isNew) { ready(function () { if (!stub()) release(); }); return; }   // 본문이 위젯 안에 있으면 그대로
+    if (isNew) {
+      bodyP.then(function (t) {   // 본문이 먼저 도착하면 자리표시가 나타나는 순간 붙인다
+        var st = stubEl();
+        if (st) { place(st, t); return; }
+        var mo = new MutationObserver(function () { var e = stubEl(); if (e) { mo.disconnect(); place(e, t); } });
+        mo.observe(document.documentElement, { childList: true, subtree: true });
+        ready(function () { mo.disconnect(); if (!placed) { if (!stub()) release(); } });
+      }).catch(function (e) { ready(function () { if (!stub()) release(); }); });
+      ready(function () { if (!placed && !stubEl()) release(); });   // 자리표시가 없는 옛 위젯(본문 포함)이면 그대로
+      return;
+    }
 
     if (isItem) {  // ② 상품 상세
       Promise.all([shell(), fetch(BASE + 'skin/item/' + idx + '.json', { cache: 'force-cache' })]).then(function (r) {
