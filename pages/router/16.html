@@ -197,8 +197,11 @@ window.addEventListener('pageshow',function(e){if(e.persisted&amp;&amp;!location
     thumb:function(x){ if(x&amp;&amp;x.s) return '&lt;span class="qim" role="img" aria-hidden="true" style="'+esc(x.s)+'"&gt;&lt;/span&gt;'; if(x&amp;&amp;x.u) return '&lt;img class="qim" src="'+esc(x.u)+'" alt="" loading="lazy"&gt;'; return '&lt;span class="qim qim-none" aria-hidden="true"&gt;&lt;/span&gt;'; }
   };
 
+  function fillImgs(a){ var ch=false, J=window.KNS_ITEMS; a.forEach(function(x){ if(x.s||x.u) return; var b=null; try{ b=document.querySelector('[data-q="'+String(x.c).replace(/"/g,'\\"')+'"]'); }catch(e){} if(b){ var im=KQ.pick(b); if(im){ if(im.s)x.s=im.s; if(im.u)x.u=im.u; ch=true; return; } } if(J){ for(var k in J){ var v=J[k]; if(v&amp;&amp;v.n===x.c&amp;&amp;v.g&amp;&amp;v.g[0]){ x.u=v.g[0]; ch=true; break; } } } }); return ch; }
+  document.addEventListener('kns:items', function(){ try{ var a=load(); if(fillImgs(a)){ save(a); render(); } }catch(e){} });
   function render(){
     var a=load(), bar=document.getElementById('qb');
+    try{ if(fillImgs(a)) save(a); }catch(e){}
     if(bar){
       bar.classList.toggle('show', a.length&gt;0);
       bar.querySelector('.tl b').textContent=a.length;
@@ -244,6 +247,7 @@ window.addEventListener('pageshow',function(e){if(e.persisted&amp;&amp;!location
   [].forEach.call(document.querySelectorAll('.ci,.sub'),function(t){ t.addEventListener('pointerdown',function(e){ var r=t.getBoundingClientRect(),d=Math.max(r.width,r.height),sp=document.createElement('span'); sp.className='rp'; sp.style.width=sp.style.height=d+'px'; sp.style.left=(e.clientX-r.left-d/2)+'px'; sp.style.top=(e.clientY-r.top-d/2)+'px'; t.appendChild(sp); setTimeout(function(){sp.remove();},600); }); });
   window.KQ.render=render;
   render();
+  window.addEventListener('load',function(){ try{ render(); }catch(e){} });
 })();
 &lt;/script&gt;&lt;script data-src="quote-flow.js"&gt;/* v79 — 요청서를 열기 전과 최종 내용 확인 전, 동일한 수량 검사 */
 (function () {
