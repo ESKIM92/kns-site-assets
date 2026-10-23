@@ -21,7 +21,18 @@
     var idx = q.get('idx');
     var isNew = NEW.indexOf(p) >= 0 && !idx && !q.has('bmode');
     var isItem = !!idx && /^\d+$/.test(idx) && !q.has('bmode');
-    function release() { var h = document.documentElement; h.className = h.className.replace(/\s*kns-pre/g, ''); }
+    var T0 = performance.now(), logged = false;
+    function plog(tag) {  // 속도 진단 기록(이 브라우저의 localStorage 'kns-perf' 에 최근 40건, 서버로 보내지 않음)
+      if (logged) return; logged = true;
+      try {
+        var nav = performance.getEntriesByType('navigation')[0] || {};
+        var cdn = performance.getEntriesByType('resource').filter(function (r) { return r.name.indexOf('jsdelivr') >= 0 && /pages\/|shell|item\//.test(r.name); }).map(function (r) { return [r.name.split('/').slice(-1)[0].slice(0, 14), Math.round(r.duration), r.transferSize]; });
+        var L = JSON.parse(localStorage.getItem('kns-perf') || '[]');
+        L.push({ ts: new Date().toISOString().slice(5, 19), p: p + (idx ? '?idx=' + idx : ''), tag: tag, show: Math.round(performance.now()), ttfb: Math.round(nav.responseStart || 0), act: Math.round(nav.activationStart || 0), vis: document.visibilityState, pre: !!document.prerendering, cdn: cdn.slice(0, 4), ua: (navigator.userAgentData && navigator.userAgentData.mobile) ? 'm' : 'd' });
+        localStorage.setItem('kns-perf', JSON.stringify(L.slice(-40)));
+      } catch (e) {}
+    }
+    function release(tag) { var h = document.documentElement; h.className = h.className.replace(/\s*kns-pre/g, ''); plog(tag || 'rel'); }
     function ready(fn) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn); else fn(); }
     function frag(html) {
       var f = document.createRange().createContextualFragment(html);
@@ -58,7 +69,7 @@
     var placed = false;
     function place(st, t) {
       if (placed || document.getElementById('kns-root')) { placed = true; release(); return; }
-      placed = true; st.parentNode.insertBefore(frag(t), st); release();
+      placed = true; st.parentNode.insertBefore(frag(t), st); release('new');
     }
     function stub() {  // ① 자리표시 위젯(data-kns-page)이 있으면 본문을 받아 붙인다 → true
       var st = stubEl();
@@ -90,7 +101,7 @@
             document.addEventListener('kns-item-missing', function () { missing = true; });
             document.body.appendChild(frag(html));
             if (missing) { var w = document.getElementById('kns-wrap'); if (w) w.parentNode.removeChild(w); }
-            release();
+            release('item');
           });
         });
       }).catch(fail);
@@ -124,7 +135,7 @@
         var head = doc.head.innerHTML;
         document.body.insertBefore(frag(head + ov + wrap.outerHTML), document.body.firstChild);
         document.body.appendChild(frag(B.outerHTML));
-        release();
+        release('skin');
       });
     }).catch(fail);
   } catch (e) { try { console.warn('kns-loader', e); } catch (x) {} var h = document.documentElement; h.className = h.className.replace(/\s*kns-pre/g, ''); }
