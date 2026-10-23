@@ -1,7 +1,7 @@
 /* 한국케이앤에스 automationkns.com — 새 디자인 공통 읽기 코드 (2026-10-23, 저장소 ESKIM92/kns-homepage-renewal mig/live_build/skin/loader.js)
    사이트 공통 Header Code 에서 불러온다(주소에 커밋 고정). 주소를 보고 세 가지 중 하나를 한다.
-   ① 새 디자인 페이지(코드 위젯): 위젯이 짧은 자리표시(data-kns-page)면 본문을 pages/<이름>.html 에서 받아 붙인다.
-   ② 상품 상세(?idx=N, bmode 없음): skin/shell.html + skin/item/N.json 으로 새 상품 상세 화면을 통째로 붙이고 아임웹 기본 화면은 숨긴다.
+   ① 새 디자인 페이지(코드 위젯): 본문은 위젯 안에 있다(자리표시 방식은 10/23 15:xx 대표님 망에서 CDN 왕복이 느려 되돌림). 자리표시(data-kns-page)가 남아 있으면 pages/<이름>.html 에서 받아 붙인다. 본 뒤 상품 상세 틀 · 데이터를 미리 받아 둔다.
+   ② 상품 상세(?idx=N, bmode 없음): skin/shell.html + skin/items.json(전 상품 묶음, 한 번 받아 캐시)으로 새 상품 상세 화면을 통째로 붙이고 아임웹 기본 화면은 숨긴다.
       데이터가 없는 상품(새로 등록 등)은 아임웹 기본 화면을 그대로 둔다.
    ③ 그 밖의 옛 페이지(게시판 · 옛 분류 · 회사소개 등): 새 머리 · 메뉴 · 바닥만 두르고 본문은 아임웹 그대로.
    English 페이지(/467 · /469 · /470)는 보류(대표님 2026-10-16) — 손대지 않는다. 디자인 모드(kns.uriweb.kr)에서는 동작하지 않는다. */
@@ -58,9 +58,6 @@
     } catch (e) {}
     if (EX.indexOf(p) >= 0) { release(); return; }
 
-    // 새 디자인 페이지: 본문을 미리 받아 두고(아임웹 본문 해석을 기다리지 않음), 자리표시 위젯이 나타나는 즉시 붙인다
-    var slug = (p === '/' || p === '/index') ? 'home' : p.slice(1);
-    var bodyP = isNew ? get(BASE + 'pages/' + slug + '.html') : null;
     function stubEl() {
       var L = document.querySelectorAll('[data-kns-page]');
       for (var i = 0; i < L.length; i++) { var sp = L[i].getAttribute('data-kns-path'); if (!sp || sp === p || (p === '/index' && sp === '/')) return L[i]; }
@@ -71,29 +68,31 @@
       if (placed || document.getElementById('kns-root')) { placed = true; release(); return; }
       placed = true; st.parentNode.insertBefore(frag(t), st); release('new');
     }
-    function stub() {  // ① 자리표시 위젯(data-kns-page)이 있으면 본문을 받아 붙인다 → true
+    function stub() {  // ① 자리표시 위젯(data-kns-page)이 있으면 본문을 받아 붙인다 → true (본문이 위젯 안에 있는 페이지는 false)
       var st = stubEl();
       if (!st) return false;
       if (document.getElementById('kns-root')) { release(); return true; }
-      (bodyP || get(BASE + 'pages/' + st.getAttribute('data-kns-page') + '.html')).then(function (t) { place(st, t); }).catch(fail);
+      get(BASE + 'pages/' + st.getAttribute('data-kns-page') + '.html').then(function (t) { place(st, t); }).catch(fail);
       return true;
     }
-    if (isNew) {
-      bodyP.then(function (t) {   // 본문이 먼저 도착하면 자리표시가 나타나는 순간 붙인다
-        var st = stubEl();
-        if (st) { place(st, t); return; }
-        var mo = new MutationObserver(function () { var e = stubEl(); if (e) { mo.disconnect(); place(e, t); } });
-        mo.observe(document.documentElement, { childList: true, subtree: true });
-        ready(function () { mo.disconnect(); if (!placed) { if (!stub()) release(); } });
-      }).catch(function (e) { ready(function () { if (!stub()) release(); }); });
-      ready(function () { if (!placed && !stubEl()) release(); });   // 자리표시가 없는 옛 위젯(본문 포함)이면 그대로
+    var itemsP = null;
+    function items() { return itemsP || (itemsP = fetch(BASE + 'skin/items.json', { cache: 'force-cache' }).then(function (r) { if (!r.ok) throw new Error('items ' + r.status); return r.json(); })); }
+    if (isNew) {   // 새 디자인 페이지 — 본문은 위젯 안(아임웹 HTML 한 번으로 끝, CDN 왕복 없음). 보고 난 뒤 상품 상세 틀 · 데이터를 미리 받아 둔다
+      ready(function () {
+        if (!stub()) release();
+        setTimeout(function () { shell().catch(function () {}); items().catch(function () {}); }, 2500);
+      });
       return;
     }
 
     if (isItem) {  // ② 상품 상세
-      Promise.all([shell(), fetch(BASE + 'skin/item/' + idx + '.json', { cache: 'force-cache' })]).then(function (r) {
-        if (!r[1].ok) { release(); return; }   // 데이터 없는 상품 → 아임웹 기본 화면
-        return r[1].text().then(function (data) {
+      Promise.all([shell(), items()]).then(function (r) {
+        var it = r[1][idx];
+        if (!it) { release(); return; }   // 데이터 없는 상품 → 아임웹 기본 화면
+        var D = {}; D[idx] = it;
+        (it.r || []).forEach(function (k) { var s = r[1][k]; if (s) D[k] = { n: s.n, gt: s.gt }; });
+        var data = JSON.stringify(D);
+        (function () {
           ready(function () {
             if (document.getElementById('kns-root')) { release(); return; }
             var html = r[0].replace('<script id="kd" type="application/json">{}</script>', function () { return '<script id="kd" type="application/json">' + data.replace(/<\/(script)/gi, '<\\/$1') + '</script>'; });
@@ -103,7 +102,7 @@
             if (missing) { var w = document.getElementById('kns-wrap'); if (w) w.parentNode.removeChild(w); }
             release('item');
           });
-        });
+        })();
       }).catch(fail);
       return;
     }
