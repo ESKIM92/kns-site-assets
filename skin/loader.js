@@ -181,6 +181,7 @@
         });
         Array.prototype.slice.call(sec.querySelectorAll('ul.pagination li')).forEach(function (li) { var a = li.querySelector('a'); var ph = a ? (a.getAttribute('href') || '') : ''; if (/^javascript/.test(ph)) ph = ''; L.pages.push({ t: txt(li), href: ph, on: /active/.test(li.className), cls: /disabled/.test(li.className) ? 'dis' : '' }); });
         var seen = {};
+        Array.prototype.slice.call(sec.querySelectorAll('ul.dropdown-menu li[class*="_category_"]')).forEach(function (li) { var mc = (li.className.match(/_category_(\w+)/) || [])[1]; if (!mc || mc === 'all' || seen[mc]) return; seen[mc] = 1; var n = txt(li); if (!n) return; L.cats.push({ n: n, href: '/' + b + '/?category=' + mc, on: L.cat === mc }); });   // 아임웹 분류 선택 메뉴(전체 분류)
         Array.prototype.slice.call(sec.querySelectorAll('a[href*="category="]')).forEach(function (a) { var hh = a.getAttribute('href') || '', mc = hh.match(/category=([^&]+)/); if (!mc || seen[mc[1]]) return; seen[mc[1]] = 1; var n = txt(a); if (!n) return; L.cats.push({ n: n, href: '/' + b + '/?category=' + mc[1], on: L.cat === mc[1] }); });
         L.total = total || L.rows.filter(function (r) { return !r.nt; }).length;
         L.lockNote = L.rows.some(function (r) { return r.lock; });
