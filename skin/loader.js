@@ -77,7 +77,8 @@
       return true;
     }
     var itemsP = null;
-    function items() { return itemsP || (itemsP = fetch(BASE + 'skin/items.json', { cache: 'force-cache' }).then(function (r) { if (!r.ok) throw new Error('items ' + r.status); return r.json(); })); }
+    // 받은 묶음은 window.KNS_ITEMS 에 두고 kns:items 를 알린다 — 견적 바구니가 사진 없는 항목(사진 저장 전에 담은 것)의 대표 사진을 여기서 채운다(sub.js fillImgs)
+    function items() { return itemsP || (itemsP = fetch(BASE + 'skin/items.json', { cache: 'force-cache' }).then(function (r) { if (!r.ok) throw new Error('items ' + r.status); return r.json(); }).then(function (j) { window.KNS_ITEMS = j; try { document.dispatchEvent(new CustomEvent('kns:items')); } catch (e) {} return j; })); }
     if (isNew) {   // 새 디자인 페이지 — 본문은 위젯 안(아임웹 HTML 한 번으로 끝, CDN 왕복 없음). 보고 난 뒤 상품 상세 틀 · 데이터를 미리 받아 둔다
       ready(function () {
         if (!stub()) release();
