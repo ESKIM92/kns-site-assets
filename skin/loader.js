@@ -208,3 +208,41 @@
     skinWrap();
   } catch (e) { try { console.warn('kns-loader', e); } catch (x) {} var h = document.documentElement; h.className = h.className.replace(/\s*kns-pre/g, ''); }
 })();
+
+/* kns-conv — 묶음 C 전환 신호(2026-10-26, 대표님 10:29 "진행해"). 운영 도메인에서만.
+   GA4(G-PN5DES9FT7, GTM-MKGNT73 이 싣는 구글 태그)로 이벤트를 보낸다:
+     generate_lead  — /16 문의 저장 성공(kns-inquiry-sent, 저장이 실제로 된 뒤에만 발생)
+     chat_start     — 채널톡 상담 생성(ChannelIO onChatCreated, 페이지당 1회)
+     contact_phone  — tel: 링크 클릭 / contact_email — mailto: 클릭 / contact_kakao — 카카오톡 링크 클릭
+     doc_lead       — 자료 내려받기 전 정보 입력(kns-lead, 고객당 처음 1회)
+   Google Ads 전환은 window.KNS_CONV 의 send_to('AW-10866308738/라벨')가 채워진 항목만 보낸다(라벨은 계정에서 전환 항목을 만든 뒤 넣음 — 비어 있으면 GA4 만). */
+(function () {
+  try {
+    if (window.__knsConv) return; window.__knsConv = 1;
+    if (!/(^|\.)automationkns\.com$/.test(location.hostname)) return;
+    var C = window.KNS_CONV || { lead: '', chat: '', phone: '', email: '', kakao: '' };
+    function gt() { window.dataLayer = window.dataLayer || []; if (typeof window.gtag !== 'function') window.gtag = function () { window.dataLayer.push(arguments); }; return window.gtag; }
+    var once = {};
+    function fire(k, ev, p, one) {
+      if (one) { if (once[k]) return; once[k] = 1; }
+      try {
+        p = p || {}; p.send_to = 'G-PN5DES9FT7'; p.page_path = location.pathname;
+        var g = gt(); g('event', ev, p);
+        if (C[k]) g('event', 'conversion', { send_to: C[k] });
+      } catch (e) { try { console.warn('kns-conv', e); } catch (x) {} }
+    }
+    document.addEventListener('kns-inquiry-sent', function () { fire('lead', 'generate_lead', { form_name: 'inquiry_16' }); });
+    document.addEventListener('kns-lead', function () { fire('doc', 'doc_lead', {}, true); });
+    document.addEventListener('click', function (e) {
+      var a = e.target && e.target.closest && e.target.closest('a[href]'); if (!a) return;
+      var h = a.getAttribute('href') || '';
+      if (/^tel:/i.test(h)) fire('phone', 'contact_phone', { link_url: h.slice(0, 40) });
+      else if (/^mailto:/i.test(h)) fire('email', 'contact_email', { link_url: h.slice(0, 60) });
+      else if (/(open|pf)\.kakao\.com/i.test(h)) fire('kakao', 'contact_kakao', { link_url: h.slice(0, 80) });
+    }, true);
+    (function ch(n) {
+      if (typeof window.ChannelIO === 'function') { try { window.ChannelIO('onChatCreated', function () { fire('chat', 'chat_start', { method: 'channeltalk' }, true); }); } catch (e) {} }
+      else if (n < 60) setTimeout(function () { ch(n + 1); }, 500);
+    })(0);
+  } catch (e) { try { console.warn('kns-conv', e); } catch (x) {} }
+})();
