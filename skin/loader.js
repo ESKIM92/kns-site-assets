@@ -240,9 +240,14 @@
       else if (/^mailto:/i.test(h)) fire('email', 'contact_email', { link_url: h.slice(0, 60) });
       else if (/(open|pf)\.kakao\.com/i.test(h)) fire('kakao', 'contact_kakao', { link_url: h.slice(0, 80) });
     }, true);
-    (function ch(n) {
-      if (typeof window.ChannelIO === 'function') { try { window.ChannelIO('onChatCreated', function () { fire('chat', 'chat_start', { method: 'channeltalk' }, true); }); } catch (e) {} }
-      else if (n < 60) setTimeout(function () { ch(n + 1); }, 500);
-    })(0);
+    // 채널톡 콜백은 부팅(아임웹 channel_plugin.js 의 boot) 뒤에 걸어야 유지된다(10/26 시험: 부팅 전 등록은 상담 생성 때 호출되지 않음).
+    // → 부팅 전에 한 번, 플러그인 화면(#ch-plugin-script-iframe)이 생긴 뒤 한 번 더 건다(같은 종류 콜백은 덮어써짐).
+    function reg() { try { window.ChannelIO('onChatCreated', function () { fire('chat', 'chat_start', { method: 'channeltalk' }, true); }); } catch (e) {} }
+    (function ch(n, pre) {
+      var ok = typeof window.ChannelIO === 'function';
+      if (ok && !pre) { reg(); pre = 1; }
+      if (ok && document.getElementById('ch-plugin-script-iframe')) { setTimeout(reg, 300); return; }
+      if (n < 120) setTimeout(function () { ch(n + 1, pre); }, 500);
+    })(0, 0);
   } catch (e) { try { console.warn('kns-conv', e); } catch (x) {} }
 })();
