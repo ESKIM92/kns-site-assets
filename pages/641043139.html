@@ -635,7 +635,7 @@ function kmb(){var o=null;try{o=JSON.parse(sessionStorage.getItem('kns_km')||'nu
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',kmb);else kmb();
 if(/search\.html$/.test(location.pathname)){var m=location.hash.match(/^#q=(.*)$/);if(m)i.value=decodeURIComponent(m[1])}
 })();</script><script id="k68lead">(function(){var K='kns_lead_v1',DK='kns_lead_dl_v1',mem=null;
-var QK='kns_lead_q_v1',memq=[],flushing=false;if(!window.KNS_LEAD_SINK&&/(^|\.)automationkns\.com$/.test(location.hostname))window.KNS_LEAD_SINK={page:'/dl-log'};
+var QK='kns_lead_q_v1',memq=[],flushing=false;if(!window.KNS_LEAD_DB&&/(^|\.)automationkns\.com$/.test(location.hostname))window.KNS_LEAD_DB={url:'https://dmmfebthlzslrjiamzuq.supabase.co',key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtbWZlYnRobHpzbHJqaWFtenVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTEyNjEsImV4cCI6MjA4NjI4NzI2MX0.bH1zwAHohdGktrpw-_7zoYBe9KbKcgfOwfLABGesBMc',table:'web_dl_log'};if(!window.KNS_LEAD_SINK&&!window.KNS_LEAD_DB&&/(^|\.)automationkns\.com$/.test(location.hostname))window.KNS_LEAD_SINK={page:'/dl-log'};
 function kst(){var d=new Date(Date.now()+9*3600e3);return d.toISOString().replace('T',' ').slice(0,19)+' (KST)'}
 function lead(){if(mem)return mem;try{return JSON.parse(localStorage.getItem(K)||'null')}catch(x){return null}}
 function rid(){return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8)}
@@ -644,7 +644,11 @@ function qset(L){memq=L;try{localStorage.setItem(QK,JSON.stringify(L))}catch(x){
 function enq(k,doc){var v=lead();if(!v)return;var L=qget();L.push({id:rid(),k:k,cid:v.cid,co:v.co,nm:v.nm,em:v.em,tel:v.tel,ad:v.ad?'동의':'미동의',t:doc&&doc.t||'',u:doc&&doc.u||'',pg:location.pathname.split('/').pop()+location.hash,at:kst(),n:0});qset(L.slice(-500));flush()}
 function nz(s){return String(s||'').replace(/[\s*·:()]/g,'')}
 function tok(){return new Promise(function(ok,no){var T=window.TOKEN;if(!(T&&T.makeToken))return no(new Error('no TOKEN'));var done=false;setTimeout(function(){if(!done)no(new Error('token timeout'))},15000);try{T.makeToken(86400,'form',function(a,b){done=true;if(a&&b)ok([a,b]);else no(new Error('empty token'))})}catch(x){no(x)}})}
-function flush(){var S=window.KNS_LEAD_SINK;if(!S||flushing)return;var L=qget();if(!L.length)return;var ev=L[0];flushing=true;
+function flushDB(){var D=window.KNS_LEAD_DB;if(!D||flushing)return;var L=qget();if(!L.length)return;var ev=L[0];flushing=true;
+ fetch(D.url+'/rest/v1/'+D.table,{method:'POST',headers:{'apikey':D.key,'Authorization':'Bearer '+D.key,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({rec_id:ev.id,cust_id:ev.cid,kind:ev.k,co:ev.co,nm:ev.nm,em:ev.em,tel:ev.tel,ad:ev.ad,doc_t:ev.t,doc_u:ev.u,pg:ev.pg,at_kst:ev.at,ua:String(navigator.userAgent||'').slice(0,200)})})
+ .then(function(r){if(!(r.ok||r.status===409))throw new Error('db '+r.status);qset(qget().filter(function(x){return x.id!==ev.id}));flushing=false;document.dispatchEvent(new CustomEvent('kns-lead-sent',{detail:ev.id}));setTimeout(flushDB,300)})
+ .catch(function(e){flushing=false;var L2=qget();if(L2[0]&&L2[0].id===ev.id){L2[0].n=(L2[0].n||0)+1;L2[0].err=String(e&&e.message||e).slice(0,80);qset(L2)}setTimeout(flushDB,Math.min(60000,5000*(ev.n+1)))})}
+function flush(){if(window.KNS_LEAD_DB)return flushDB();var S=window.KNS_LEAD_SINK;if(!S||flushing)return;var L=qget();if(!L.length)return;var ev=L[0];flushing=true;
  fetch(S.page,{credentials:'same-origin',cache:'no-store'}).then(function(r){return r.text()}).then(function(h){
   var d=new DOMParser().parseFromString(h,'text/html'),tk=d.querySelector('input[name=write_token]'),f=tk&&tk.closest('form');if(!f)throw new Error('sink form');
   var map={};[].forEach.call(f.querySelectorAll('input[name^="input_"],textarea[name^="textarea_"]'),function(i){var g=i.closest('.form-group')||i.parentNode;var lab=nz((g.querySelector('label,.title,.control-label')||g).textContent);map[lab]=i.name});
@@ -673,7 +677,7 @@ function build(){box=document.createElement('div');box.id='kld';box.hidden=true;
 +'<div><label><input type="checkbox" name="c2">[선택] 광고성 정보 수신 동의 (뉴스레터 · 제품 · 견적 안내)</label><details><summary>내용 보기</summary><p><b>목적: 신제품 · 기술 자료 소식(뉴스레터)과 제품 · 견적 안내 발송 — 홍보 · 판매 권유 목적</b></p><p>받는 방법: 이메일 · 전화 · 문자</p><p>항목: 업체명, 이름, 이메일, 연락처</p><p>보유 기간: 동의 철회 시까지</p><p>동의하지 않으셔도 자료를 내려받을 수 있습니다.</p></details></div>'
 +'<p class="n">선택 항목은 동의하지 않으셔도 자료를 내려받을 수 있습니다.</p></div>'
 +'<p class="er" hidden></p><button type="submit" class="go">동의하고 내려받기</button>'
-+'<p class="p">'+(window.KNS_LEAD_SINK?'':'미리보기 화면: 입력값은 서버로 보내지 않고 이 브라우저에만 저장됩니다. ')+' <a href="/privacy" target="_blank" rel="noopener">개인정보 처리방침</a></p></form>';
++'<p class="p">'+((window.KNS_LEAD_SINK||window.KNS_LEAD_DB)?'':'미리보기 화면: 입력값은 서버로 보내지 않고 이 브라우저에만 저장됩니다. ')+' <a href="/privacy" target="_blank" rel="noopener">개인정보 처리방침</a></p></form>';
 (document.getElementById('kns-root')||document.body).appendChild(box);var f=box.querySelector('form'),er=box.querySelector('.er');
 box.querySelector('.x').onclick=close;box.addEventListener('click',function(e){if(e.target===box)close()});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!box.hidden)close()});
