@@ -307,3 +307,28 @@
     })(0);
   } catch (e) { try { console.warn('kns-src', e); } catch (x) {} }
 })();
+
+/* kns-item — 상품 상세 · 시리즈 식별(2026-10-29 대표님 승인). GA4 표준 전자상거래 이벤트 view_item 으로
+   상품 번호(p<idx>)·시리즈(s:<이름>)를 보낸다 → GA4 '항목' 보고서의 itemId 로 어떤 제품을 봤는지 집계 가능.
+   페이지 조회수에는 영향 없음(별도 이벤트). 운영 도메인에서만, 같은 항목은 체류 중 1회. */
+(function () {
+  try {
+    if (window.__knsItem) return; window.__knsItem = 1;
+    if (!/(^|\.)automationkns\.com$/.test(location.hostname)) return;
+    function gt() { window.dataLayer = window.dataLayer || []; if (typeof window.gtag !== 'function') window.gtag = function () { window.dataLayer.push(arguments); }; return window.gtag; }
+    var sent = {};
+    function send(id, nm) {
+      if (!id || sent[id]) return; sent[id] = 1;
+      try { gt()('event', 'view_item', { send_to: 'G-PN5DES9FT7', items: [{ item_id: String(id).slice(0, 40), item_name: String(nm || '').slice(0, 80) }] }); } catch (e) {}
+    }
+    function scan() {
+      var q = null; try { q = new URLSearchParams(location.search); } catch (e) {}
+      var idx = q && q.get('idx');
+      if (idx && /^\d+$/.test(idx)) send('p' + idx, (document.title || '').split('|')[0].trim());
+      var m = (location.hash || '').match(/[#&]s=([A-Za-z0-9._%-]{2,30})/);
+      if (m) { var s = m[1]; try { s = decodeURIComponent(s); } catch (e) {} send('s:' + s, s); }
+    }
+    setTimeout(scan, 2500);
+    addEventListener('hashchange', function () { setTimeout(scan, 300); });
+  } catch (e) { try { console.warn('kns-item', e); } catch (x) {} }
+})();
