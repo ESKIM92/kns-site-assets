@@ -251,3 +251,59 @@
     })(0, 0);
   } catch (e) { try { console.warn('kns-conv', e); } catch (x) {} }
 })();
+
+/* kns-src — 문의 유입 경로 자동 기록(2026-10-28, 대표님 13:26 승인). 운영 도메인에서만.
+   첫 방문 때 주소의 gclid·gbraid·wbraid 또는 utm_medium=cpc → '구글 광고', 그 외 utm → '캠페인(…)',
+   없으면 직전 사이트(referrer)로 구글 검색 / 네이버 / 기타 검색 / 다른 사이트(주소) / 직접 접속 판정.
+   브라우저 저장소 kns_src_v1 에 최대 90일 보관(첫 방문 페이지 · 일시 포함), window.KNS_SRC 로 공개.
+   ① /16 접수: /ajax/form_add.cm 전송을 가로채 '[홈페이지 문의]'로 시작하는 문의 내용 칸 끝에
+      "[유입: … / 첫 페이지 … / 일시 …]" 한 줄 추가(이미 있으면 추가 안 함 — 이중 기록 방지)
+   ② 채널톡: 부팅 뒤 updateUser 로 프로필에 유입경로 · 첫페이지 · 첫방문 기록 */
+(function () {
+  try {
+    if (window.__knsSrc) return; window.__knsSrc = 1;
+    if (!/(^|\.)automationkns\.com$/.test(location.hostname)) return;
+    var K = 'kns_src_v1', NOW = Date.now(), rec = null;
+    try { rec = JSON.parse(localStorage.getItem(K) || 'null'); } catch (e) {}
+    if (rec && (!rec.t || NOW - rec.t > 90 * 864e5)) rec = null;
+    if (!rec) {
+      var q = null; try { q = new URLSearchParams(location.search); } catch (e) {}
+      var gv = function (k) { return (q && q.get(k)) || ''; };
+      var g = gv('gclid') || gv('gbraid') || gv('wbraid');
+      var um = gv('utm_medium').toLowerCase(), us = gv('utm_source');
+      var refh = ''; try { refh = document.referrer ? new URL(document.referrer).hostname : ''; } catch (e) {}
+      var label;
+      if (g || um === 'cpc' || um === 'ppc') label = '구글 광고';
+      else if (us) label = '캠페인(' + us.slice(0, 20) + (um ? '/' + um.slice(0, 10) : '') + ')';
+      else if (!refh || /(^|\.)automationkns\.com$/.test(refh)) label = '직접 접속';
+      else if (/(^|\.)google\./.test(refh)) label = '구글 검색';
+      else if (/naver\.com$/.test(refh)) label = '네이버';
+      else if (/(^|\.)(bing\.com|duckduckgo\.com|daum\.net|search\.yahoo\.com|yandex\.com)$/.test(refh)) label = '기타 검색(' + refh + ')';
+      else label = '다른 사이트(' + refh.slice(0, 40) + ')';
+      var d = new Date(NOW + 9 * 3600e3);
+      rec = { t: NOW, label: label, pg: (location.pathname.replace(/\/+$/, '') || '/').slice(0, 60), at: d.toISOString().slice(0, 16).replace('T', ' '), g: String(g).slice(0, 20) };
+      try { localStorage.setItem(K, JSON.stringify(rec)); } catch (e) {}
+    }
+    window.KNS_SRC = rec;
+    var line = '[유입: ' + rec.label + ' / 첫 페이지 ' + rec.pg + ' / ' + rec.at + (rec.g ? ' / gclid ' + rec.g : '') + ']';
+    var OF = window.fetch;
+    window.fetch = function (u, o) {
+      try {
+        if (typeof u === 'string' && u.indexOf('/ajax/form_add.cm') >= 0 && o && typeof o.body === 'string') {
+          var b = new URLSearchParams(o.body), hit = '';
+          b.forEach(function (v, k) { if (!hit && v.indexOf('[홈페이지 문의]') === 0 && v.indexOf('[유입:') < 0) hit = k; });
+          if (hit) { b.set(hit, b.get(hit) + '\n\n' + line); o.body = b.toString(); }
+        }
+      } catch (e) { try { console.warn('kns-src', e); } catch (x) {} }
+      return OF.apply(this, arguments);
+    };
+    (function chUp(n) {
+      if (typeof window.ChannelIO !== 'function') { if (n < 90) setTimeout(function () { chUp(n + 1); }, 1000); return; }
+      try {
+        window.ChannelIO('updateUser', { profile: { '유입경로': rec.label, '첫페이지': rec.pg, '첫방문': rec.at } }, function (err) {
+          if (err && n < 90) setTimeout(function () { chUp(n + 10); }, 5000);
+        });
+      } catch (e) {}
+    })(0);
+  } catch (e) { try { console.warn('kns-src', e); } catch (x) {} }
+})();
