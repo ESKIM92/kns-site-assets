@@ -347,11 +347,11 @@
     var p = location.pathname.replace(/\/+$/, '') || '/';
     if (p === '/15' || ['/467', '/469', '/470'].indexOf(p) >= 0) return;
     var K = '#kns-root .cat a.kcs';
-    var CSS = K + '{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:2px;min-height:100px;margin:8px 0 6px;padding:10px 8px 10px 100px;box-sizing:border-box;border-radius:6px;overflow:hidden;color:#0B2545;text-decoration:none;background:linear-gradient(135deg,#FFFFFF 0%,#D6E9FA 100%);border:1.5px solid #0070C0;box-shadow:0 2px 6px rgba(0,112,192,.12);transition:box-shadow .2s ease}'
+    var CSS = K + '{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:2px;min-height:100px;margin:8px 0 6px;padding:10px 6px 10px 96px;box-sizing:border-box;border-radius:6px;overflow:hidden;color:#0B2545;text-decoration:none;background:linear-gradient(135deg,#FFFFFF 0%,#D6E9FA 100%);border:1.5px solid #0070C0;box-shadow:0 2px 6px rgba(0,112,192,.12);transition:box-shadow .2s ease}'
       + K + '::before{content:"";position:absolute;left:9px;top:50%;width:80px;height:80px;margin-top:-40px;border-radius:5px;background:url(' + BASE + 'skin/img/case-banner.jpg) center/cover #fff;box-shadow:0 0 0 1px rgba(0,112,192,.25)}'
       + K + ':hover,' + K + ':focus-visible{box-shadow:0 6px 16px rgba(0,112,192,.22);color:#0B2545}'
       + K + ' small{display:block;font-size:10px;font-weight:700;line-height:1.4;color:#0070C0;white-space:nowrap}'
-      + K + ' b{display:block;font-size:17px;font-weight:800;line-height:1.2;letter-spacing:-.03em;color:#0B2545;word-break:keep-all}'
+      + K + ' b{display:block;font-size:16px;font-weight:800;line-height:1.2;letter-spacing:-.04em;color:#0B2545;white-space:nowrap}'
       + K + ' .kcs-go{display:inline-block;margin-top:4px;padding:2px 9px;border-radius:10px;background:#FFC83D;color:#0B2545;font-size:10.5px;font-weight:800;line-height:1.4;white-space:nowrap}'
       + '@media (prefers-reduced-motion:reduce){' + K + '{transition:none}}';
     function put() {
