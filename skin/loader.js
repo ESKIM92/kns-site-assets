@@ -335,7 +335,7 @@
 
 /* kns-case-side — 왼쪽 메뉴 '현장 적용 사례' 배너(2026-10-29 대표님 13:13 "이걸로 진행" 승인).
    '전체 제품 라인업' 버튼(.cat h3) 바로 아래에 정사각형 사진(skin/img/case-banner.jpg, 대표님 제공 생성 이미지)
-   + '현장 적용 사례' 제목만 있는 배너를 넣는다(13:36 설명 줄 · 버튼 삭제) → /15. 왼쪽 메뉴가 있는 모든 화면에 한 번만.
+   + '설비 도입 실적 / 현장 적용 사례' 두 줄 배너(버튼 없음, 13:39 대표님) — 4.5초마다 빛이 지나가고 사진 테두리가 은은하게 빛남(움직임 줄이기 설정이면 정지) → /15. 왼쪽 메뉴가 있는 모든 화면에 한 번만.
    /15(적용사례 자체) · English 페이지는 넣지 않는다. 클릭은 GA4 select_content(content_type=side_case). */
 (function () {
   try {
@@ -347,13 +347,16 @@
     var p = location.pathname.replace(/\/+$/, '') || '/';
     if (p === '/15' || ['/467', '/469', '/470'].indexOf(p) >= 0) return;
     var K = '#kns-root .cat a.kcs';
-    var CSS = K + '{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:2px;min-height:100px;margin:8px 0 6px;padding:10px 6px 10px 96px;box-sizing:border-box;border-radius:6px;overflow:hidden;color:#0B2545;text-decoration:none;background:linear-gradient(135deg,#FFFFFF 0%,#D6E9FA 100%);border:1.5px solid #0070C0;box-shadow:0 2px 6px rgba(0,112,192,.12);transition:box-shadow .2s ease}'
-      + K + '::before{content:"";position:absolute;left:9px;top:50%;width:80px;height:80px;margin-top:-40px;border-radius:5px;background:url(' + BASE + 'skin/img/case-banner.jpg) center/cover #fff;box-shadow:0 0 0 1px rgba(0,112,192,.25)}'
-      + K + ':hover,' + K + ':focus-visible{box-shadow:0 6px 16px rgba(0,112,192,.22);color:#0B2545}'
-      + K + ' small{display:block;font-size:10px;font-weight:700;line-height:1.4;color:#0070C0;white-space:nowrap}'
+    var CSS = K + '{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:3px;min-height:100px;margin:8px 0 6px;padding:10px 6px 10px 96px;box-sizing:border-box;border-radius:6px;overflow:hidden;isolation:isolate;color:#0B2545;text-decoration:none;background:linear-gradient(135deg,#FFFFFF 0%,#D6E9FA 100%);border:1.5px solid #0070C0;box-shadow:0 2px 6px rgba(0,112,192,.12);transition:box-shadow .25s ease,transform .25s ease}'
+      + K + '::before{content:"";position:absolute;left:9px;top:50%;width:80px;height:80px;margin-top:-40px;border-radius:5px;background:url(' + BASE + 'skin/img/case-banner.jpg) center/cover #fff;box-shadow:0 0 0 1px rgba(0,112,192,.25);animation:kcsGlow 2.6s ease-in-out infinite;transition:transform .3s ease}'
+      + K + '::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:45%;z-index:2;pointer-events:none;background:linear-gradient(100deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.8) 50%,rgba(255,255,255,0) 100%);transform:skewX(-20deg);animation:kcsShine 4.5s ease-in-out 1s infinite}'
+      + '@keyframes kcsShine{0%{left:-60%}30%{left:140%}100%{left:140%}}'
+      + '@keyframes kcsGlow{0%,100%{box-shadow:0 0 0 1px rgba(0,112,192,.25)}50%{box-shadow:0 0 0 2px rgba(0,112,192,.55),0 0 14px rgba(0,112,192,.45)}}'
+      + K + ':hover,' + K + ':focus-visible{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,112,192,.25);color:#0B2545}'
+      + K + ':hover::before,' + K + ':focus-visible::before{transform:scale(1.06)}'
+      + K + ' small{display:block;font-size:10.5px;font-weight:700;line-height:1.3;color:#0070C0;white-space:nowrap;letter-spacing:.02em}'
       + K + ' b{display:block;font-size:16px;font-weight:800;line-height:1.2;letter-spacing:-.04em;color:#0B2545;white-space:nowrap}'
-      + K + ' .kcs-go{display:inline-block;margin-top:4px;padding:2px 9px;border-radius:10px;background:#FFC83D;color:#0B2545;font-size:10.5px;font-weight:800;line-height:1.4;white-space:nowrap}'
-      + '@media (prefers-reduced-motion:reduce){' + K + '{transition:none}}';
+      + '@media (prefers-reduced-motion:reduce){' + K + ',' + K + '::before{transition:none;animation:none}' + K + '::after{display:none}}';
     function put() {
       var h = document.querySelector('#kns-root .cat h3');
       if (!h) return false;
@@ -361,7 +364,7 @@
       if (!document.getElementById('kns-case-side-css')) { var st = document.createElement('style'); st.id = 'kns-case-side-css'; st.textContent = CSS; document.head.appendChild(st); }
       var a = document.createElement('a');
       a.className = 'kcs'; a.href = '/15'; a.title = '현장 적용 사례 보기';
-      a.innerHTML = '<b>현장 적용 사례</b>';   // 대표님 13:36: 제목만(설명 줄 · '사례 보기' 버튼 삭제)
+      a.innerHTML = '<small>설비 도입 실적</small><b>현장 적용 사례</b>';   // 대표님 13:39: 두 줄 유지 · 버튼 없음 · 움직임(빛 지나감 · 사진 테두리 빛)
       a.addEventListener('click', function () {
         try { window.dataLayer = window.dataLayer || []; var g = typeof window.gtag === 'function' ? window.gtag : function () { window.dataLayer.push(arguments); }; g('event', 'select_content', { send_to: 'G-PN5DES9FT7', content_type: 'side_case', content_id: p }); } catch (e) {}
       });
