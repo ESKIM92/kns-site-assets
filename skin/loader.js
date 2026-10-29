@@ -335,7 +335,7 @@
 
 /* kns-case-side — 왼쪽 메뉴 '현장 적용 사례' 배너(2026-10-29 대표님 13:13 "이걸로 진행" 승인).
    '전체 제품 라인업' 버튼(.cat h3) 바로 아래에 정사각형 사진(skin/img/case-banner.jpg, 대표님 제공 생성 이미지)
-   + '설비 도입 실적 / 현장 적용 사례 / 사례 보기 ›' 배너를 넣는다 → /15. 왼쪽 메뉴가 있는 모든 화면에 한 번만.
+   + '현장 적용 사례' 제목만 있는 배너를 넣는다(13:36 설명 줄 · 버튼 삭제) → /15. 왼쪽 메뉴가 있는 모든 화면에 한 번만.
    /15(적용사례 자체) · English 페이지는 넣지 않는다. 클릭은 GA4 select_content(content_type=side_case). */
 (function () {
   try {
@@ -351,7 +351,7 @@
       + K + '::before{content:"";position:absolute;left:9px;top:50%;width:80px;height:80px;margin-top:-40px;border-radius:5px;background:url(' + BASE + 'skin/img/case-banner.jpg) center/cover #fff;box-shadow:0 0 0 1px rgba(0,112,192,.25)}'
       + K + ':hover,' + K + ':focus-visible{box-shadow:0 6px 16px rgba(0,112,192,.22);color:#0B2545}'
       + K + ' small{display:block;font-size:10px;font-weight:700;line-height:1.4;color:#0070C0;white-space:nowrap}'
-      + K + ' b{display:block;font-size:16px;font-weight:800;line-height:1.2;letter-spacing:-.03em;color:#0B2545;word-break:keep-all}'
+      + K + ' b{display:block;font-size:17px;font-weight:800;line-height:1.2;letter-spacing:-.03em;color:#0B2545;word-break:keep-all}'
       + K + ' .kcs-go{display:inline-block;margin-top:4px;padding:2px 9px;border-radius:10px;background:#FFC83D;color:#0B2545;font-size:10.5px;font-weight:800;line-height:1.4;white-space:nowrap}'
       + '@media (prefers-reduced-motion:reduce){' + K + '{transition:none}}';
     function put() {
@@ -361,7 +361,7 @@
       if (!document.getElementById('kns-case-side-css')) { var st = document.createElement('style'); st.id = 'kns-case-side-css'; st.textContent = CSS; document.head.appendChild(st); }
       var a = document.createElement('a');
       a.className = 'kcs'; a.href = '/15'; a.title = '현장 적용 사례 보기';
-      a.innerHTML = '<small>설비 도입 실적</small><b>현장 적용 사례</b><span class="kcs-go">사례 보기 ›</span>';
+      a.innerHTML = '<b>현장 적용 사례</b>';   // 대표님 13:36: 제목만(설명 줄 · '사례 보기' 버튼 삭제)
       a.addEventListener('click', function () {
         try { window.dataLayer = window.dataLayer || []; var g = typeof window.gtag === 'function' ? window.gtag : function () { window.dataLayer.push(arguments); }; g('event', 'select_content', { send_to: 'G-PN5DES9FT7', content_type: 'side_case', content_id: p }); } catch (e) {}
       });
