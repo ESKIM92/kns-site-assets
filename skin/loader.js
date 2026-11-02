@@ -347,16 +347,21 @@
     var p = location.pathname.replace(/\/+$/, '') || '/';
     if (p === '/15' || ['/467', '/469', '/470'].indexOf(p) >= 0) return;
     var K = '#kns-root .cat a.kcs';
-    var CSS = K + '{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:3px;min-height:92px;margin:10px 6px 10px;padding:9px 5px 9px 88px;box-sizing:border-box;border-radius:5px;overflow:hidden;isolation:isolate;color:#0B2545;text-decoration:none;background:linear-gradient(135deg,#FFFFFF 0%,#D6E9FA 100%);border:1.5px solid #0070C0;box-shadow:0 2px 6px rgba(0,112,192,.12);transition:box-shadow .25s ease,transform .25s ease}'
-      + K + '::before{content:"";position:absolute;left:8px;top:50%;width:72px;height:72px;margin-top:-36px;border-radius:5px;background:url(' + BASE + 'skin/img/case-banner.jpg) center/cover #fff;box-shadow:0 0 0 1px rgba(0,112,192,.25);animation:kcsGlow 2.6s ease-in-out infinite;transition:transform .3s ease}'
-      + K + '::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:45%;z-index:2;pointer-events:none;background:linear-gradient(100deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.8) 50%,rgba(255,255,255,0) 100%);transform:skewX(-20deg);animation:kcsShine 4.5s ease-in-out 1s infinite}'
-      + '@keyframes kcsShine{0%{left:-60%}30%{left:140%}100%{left:140%}}'
-      + '@keyframes kcsGlow{0%,100%{box-shadow:0 0 0 1px rgba(0,112,192,.25)}50%{box-shadow:0 0 0 2px rgba(0,112,192,.55),0 0 14px rgba(0,112,192,.45)}}'
-      + K + ':hover,' + K + ':focus-visible{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,112,192,.25);color:#0B2545}'
-      + K + ':hover::before,' + K + ':focus-visible::before{transform:scale(1.06)}'
-      + K + ' small{display:inline-block;align-self:flex-start;padding:1px 7px;border-radius:9px;background:#FFC83D;color:#0B2545;font-size:10px;font-weight:800;line-height:1.4;white-space:nowrap;letter-spacing:.02em}'
-      + K + ' b{display:block;font-size:15.5px;font-weight:800;line-height:1.2;letter-spacing:-.04em;color:#0B2545;white-space:nowrap;padding:0 1px;background:linear-gradient(transparent 62%,rgba(255,200,61,.55) 62%,rgba(255,200,61,.55) 92%,transparent 92%)}'
-      + '@media (prefers-reduced-motion:reduce){' + K + ',' + K + '::before{transition:none;animation:none}' + K + '::after{display:none}}';
+    var IMG = BASE + 'skin/img/case-banner.jpg';
+    // 11/2 10:16 대표님 "진행해": 사진 위 · 제목 아래 카드형(이달의 주요 제품 카드와 같은 문법) — 사진 천천히 확대 · 빛 지나감 · 라벨 점 깜빡임 · 네이비 원 화살표
+    var CSS = K + '{position:relative;display:block;margin:10px 6px 12px;padding:76px 12px 10px;box-sizing:border-box;border-radius:8px;overflow:hidden;isolation:isolate;text-decoration:none;color:#0B2545;background:#fff;border:1px solid #C9DDF2;box-shadow:0 3px 10px rgba(11,37,69,.10);transition:box-shadow .25s ease,transform .25s ease,border-color .25s ease}'
+      + K + '::before{content:"";position:absolute;left:0;right:0;top:0;height:68px;z-index:-1;background:url(' + IMG + ') 50% 42%/cover no-repeat #eaf3fd;transform-origin:50% 60%;animation:kcsZoom 10s ease-in-out infinite alternate}'
+      + K + '::after{content:"";position:absolute;top:0;right:0;bottom:0;left:0;z-index:2;pointer-events:none;background:linear-gradient(105deg,rgba(255,255,255,0) 42%,rgba(255,255,255,.65) 50%,rgba(255,255,255,0) 58%) 220% 0/300% 100% no-repeat;animation:kcsShine 5s ease-in-out 1s infinite}'
+      + '@keyframes kcsZoom{from{transform:scale(1)}to{transform:scale(1.1)}}'
+      + '@keyframes kcsShine{0%{background-position:220% 0}35%,100%{background-position:-120% 0}}'
+      + K + ':hover,' + K + ':focus-visible{transform:translateY(-2px);border-color:#0070C0;box-shadow:0 10px 22px rgba(0,112,192,.25);color:#0B2545}'
+      + K + ' small{position:absolute;left:8px;top:48px;z-index:1;display:inline-flex;align-items:center;gap:4px;padding:2px 8px 2px 7px;border-radius:10px;background:#FFC83D;color:#0B2545;font-size:10px;font-weight:800;line-height:1.4;white-space:nowrap;box-shadow:0 2px 6px rgba(11,37,69,.25)}'
+      + K + ' small::before{content:"";width:6px;height:6px;border-radius:50%;background:#0B2545;animation:kcsDot 1.6s ease-in-out infinite}'
+      + '@keyframes kcsDot{0%,100%{opacity:1}50%{opacity:.25}}'
+      + K + ' b{display:flex;align-items:center;justify-content:space-between;font-size:16.5px;font-weight:800;line-height:1.2;letter-spacing:-.04em;color:#0B2545;white-space:nowrap}'
+      + K + ' b::after{content:"\\203A";flex:0 0 20px;height:20px;border-radius:50%;background:#0B2545;color:#FFC83D;font-size:15px;line-height:18px;text-align:center;font-weight:700;transition:transform .25s ease,background .25s ease,color .25s ease}'
+      + K + ':hover b::after,' + K + ':focus-visible b::after{transform:translateX(3px);background:#0070C0;color:#fff}'
+      + '@media (prefers-reduced-motion:reduce){' + K + ',' + K + '::before,' + K + '::after,' + K + ' small::before,' + K + ' b::after{transition:none;animation:none}' + K + '::after{display:none}}';
     function put() {
       var h = document.querySelector('#kns-root .cat h3');
       if (!h) return false;
