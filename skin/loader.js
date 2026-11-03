@@ -382,3 +382,43 @@
     setTimeout(function () { mo.disconnect(); }, 20000);
   } catch (e) { try { console.warn('kns-case-side', e); } catch (x) {} }
 })();
+
+/* kns-micro — 세부 행동 측정 · 홈 보강(2026-11-03 대표님 17:43 "개선할 게 있으면 진행, 지속 개선"). 운영 도메인에서만.
+   ① 견적 바구니 담기(kns_quote_v1 변화, kns:quotechange) → GA4 add_to_cart{items:[{item_id:형번, item_name}]} — 가격 없음, Ads 전환 아님.
+      GA4 '항목' 보고서에서 형번별 담기 수를 바로 봄(맞춤 측정기준 등록 불필요).
+   ② 자료 내려받기 1건마다(kns-lead-dl) → GA4 doc_download{link_url} — 어떤 데이터시트 · 카탈로그가 받아지는지(내장 측정기준 '링크 URL').
+   ③ 홈(/ · /index): 렌더 제목을 'AutomationKNS' → 회사 · 지위 · 품목이 드러나는 제목(검색 결과 제목 후보), 이달의 주요 제품 카드 위쪽 파란 선이 차례로 지나가는 은은한 움직임(9초 주기, 마우스 올리면 사진 1.06배; v145 시안 — 대표님 10/29 "과하지 않게").
+   움직임 줄이기 설정이면 정지. */
+(function () {
+  try {
+    if (window.__knsMicro) return; window.__knsMicro = 1;
+    if (!/(^|\.)automationkns\.com$/.test(location.hostname)) return;
+    function gt() { window.dataLayer = window.dataLayer || []; if (typeof window.gtag !== 'function') window.gtag = function () { window.dataLayer.push(arguments); }; return window.gtag; }
+    function ev(n, p) { try { p = p || {}; p.send_to = 'G-PN5DES9FT7'; p.page_path = location.pathname; gt()('event', n, p); } catch (e) {} }
+    var QK = 'kns_quote_v1';
+    function codes() { try { return (JSON.parse(localStorage.getItem(QK) || '[]') || []).map(function (x) { return { c: x.c, n: x.n || '' }; }); } catch (e) { return []; } }
+    var prev = codes().map(function (x) { return x.c; });
+    document.addEventListener('kns:quotechange', function () {
+      var now = codes(), added = now.filter(function (x) { return prev.indexOf(x.c) < 0; });
+      prev = now.map(function (x) { return x.c; });
+      added.forEach(function (x) { ev('add_to_cart', { items: [{ item_id: String(x.c).slice(0, 60), item_name: String(x.n || x.c).slice(0, 90) }] }); });
+    });
+    document.addEventListener('kns-lead-dl', function (e) { var u = e && e.detail && e.detail.u; if (u) ev('doc_download', { link_url: String(u).slice(0, 300) }); });
+    var p = location.pathname.replace(/\/+$/, '') || '/';
+    if (p === '/' || p === '/index') {
+      var T = '한국케이앤에스(주) | JTEKT(구 KOYO) · SIKO 공식 대리점 — 엔코더 · 세이프티 · 센서 · PLC';
+      var setT = function () { if (document.title !== T) document.title = T; };
+      setT(); setTimeout(setT, 1500); setTimeout(setT, 5000);
+      var B = '#kns-root #bTrk .bn a.ad';
+      var css = B + '::after{content:"";position:absolute;left:0;top:0;height:3px;width:0;background:linear-gradient(90deg,#0070C0,#3FA0E6);border-radius:3px 3px 0 0;z-index:3;pointer-events:none;animation:kfBar 9s ease-in-out infinite}'
+        + '#kns-root #bTrk .bn:nth-child(2) a.ad::after{animation-delay:.35s}#kns-root #bTrk .bn:nth-child(3) a.ad::after{animation-delay:.7s}#kns-root #bTrk .bn:nth-child(4) a.ad::after{animation-delay:1.05s}#kns-root #bTrk .bn:nth-child(5) a.ad::after{animation-delay:1.4s}#kns-root #bTrk .bn:nth-child(6) a.ad::after{animation-delay:1.75s}#kns-root #bTrk .bn:nth-child(7) a.ad::after{animation-delay:2.1s}#kns-root #bTrk .bn:nth-child(8) a.ad::after{animation-delay:2.45s}'
+        + '@keyframes kfBar{0%{width:0;opacity:1}10%{width:100%;opacity:1}22%{width:100%;opacity:0}100%{width:100%;opacity:0}}'
+        + B + '>.p107-art{transition:transform .35s ease!important}'
+        + B + ':hover>.p107-art,' + B + ':focus-visible>.p107-art{transform:scale(1.06)!important}'
+        + B + ':hover{box-shadow:0 8px 18px rgba(0,112,192,.16)!important}'
+        + B + ':hover::after{animation:none;width:100%;opacity:1}'
+        + '@media (prefers-reduced-motion:reduce){' + B + '::after{animation:none;display:none}' + B + '>.p107-art{transition:none!important}}';
+      var st = document.createElement('style'); st.id = 'kns-micro-css'; st.textContent = css; (document.head || document.documentElement).appendChild(st);
+    }
+  } catch (e) { try { console.warn('kns-micro', e); } catch (x) {} }
+})();
