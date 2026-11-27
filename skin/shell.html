@@ -373,7 +373,7 @@ function render(){
    return '<tr><th>'+esc(h)+'</th>'+(same&&E.length>1?'<td colspan="'+E.length+'">'+vals[0]+'</td>':vals.map(function(v){return '<td>'+v+'</td>';}).join(''))+'</tr>';}).join('');
   var fe=E.some(function(e){return e.f.length;})?'<tr><th>주요 특징</th>'+E.map(function(e){return '<td>'+(e.f.length?'<ul><li>'+e.f.join('</li><li>')+'</li></ul>':'—')+'</td>';}).join('')+'</tr>':'';
   var docs='';E.forEach(function(e){docs+='<a class="it-doc" href="'+(KNS_LM[e.p]||'/products')+'#s='+encodeURIComponent(e.n)+'">'+ICO.t+esc(e.pt)+' 선정표에서 '+esc(e.n)+' 보기</a>';});
-  var DSL={datasheet:'데이터시트 PDF',catalog_series:'카탈로그 PDF',spec_sheet:'사양서 PDF',manual:'매뉴얼 PDF',product_page:'제조사 제품 페이지'}, nds=0;
+  var DSL={datasheet:'데이터시트 PDF',catalog_series:'카탈로그 PDF',spec_sheet:'사양서 PDF',manual:'매뉴얼 PDF',product_page:'제조사 제품 페이지',request:'데이터시트 요청'}, nds=0;
   E.forEach(function(e){if(e.ds){nds++;[e.ds].concat(e.ds.a||[]).forEach(function(x){docs+='<a class="it-doc dsd" href="'+esc(x.u)+'" target="_blank" rel="noopener" title="'+esc(x.d||'')+'">'+ICO.d+esc(e.n)+' '+DSL[x.k]+(x.v?' · '+esc(x.v):'')+' ↗</a>';});}});
   if(!nds) docs+='<a class="it-doc" href="'+(KNS_LM[e0.p]||'/products')+'#docs">'+ICO.d+'자료 목록 보기</a>';
   var srcs=E.map(function(e){return e.src;}).filter(function(s,i,a){return s&&a.indexOf(s)===i;}).join(' / ');
@@ -457,7 +457,7 @@ function flush(){if(window.KNS_LEAD_DB)return flushDB();var S=window.KNS_LEAD_SI
 function has(){if(mem)return true;try{return !!localStorage.getItem(K)}catch(e){return false}}
 function rh(a){return a.getAttribute('data-kdl')||a.getAttribute('href')||''}
 function gated(a){if(!a||a.closest('#kld'))return false;var h=rh(a);if(!h||/^(mailto|tel):/.test(h))return false;
- if(a.matches('a.dk-cert,a.dk-web,a.dk-kns'))return false;if(a.matches('a.dsb,a.dk-ds,a.dk-cat,a.dk-cad,a[data-lead]'))return true;
+ if(/^(inquiry\.html|\/16)\?/.test(h))return false;if(a.matches('a.dk-cert,a.dk-web,a.dk-kns'))return false;if(a.matches('a.dsb,a.dk-ds,a.dk-cat,a.dk-cad,a[data-lead]'))return true;
  if(/post_file_download|\.(pdf|zip|exe|msi|dwg|dxf|stp|step|igs|iges|eds|gsd|gsdml)(\?|#|$)/i.test(h))return true;
  if(/^(board\.html)?#62\/./.test(h))return true;
  return /^📄/.test((a.textContent||'').trim())}
